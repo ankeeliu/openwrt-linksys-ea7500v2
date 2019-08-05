@@ -1,0 +1,65 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=99
+
+. /lib/functions.sh
+. /lib/functions/uci-defaults.sh
+. /lib/functions/system.sh
+
+start(){
+
+	mac=""
+	mac_p=""
+	mac_pp=""
+	tail=""
+	mac=$(mtd_get_mac_ascii devinfo hw_mac_addr)
+
+	mac_p=$(echo "${mac//:}")
+	mac_tail=$(printf $mac_p | tail -c 2)
+
+	mac_tail_dec=$((0x${mac_tail}))
+
+	mac_tail_2g=$((mac_tail_dec+1))
+	mac_tail_5g=$((mac_tail_dec+2))
+
+	mac_tail_2g_hex=$(printf "%x\n" $mac_tail_2g)
+	mac_tail_5g_hex=$(printf "%x\n" $mac_tail_5g)
+
+	mac_head=$(printf $mac_p | head -c 10)
+
+	mac_full_2g="$mac_head$mac_tail_2g_hex"
+	mac_full_5g="$mac_head$mac_tail_5g_hex"
+
+
+	echo $mac_full_2g
+	echo $mac_full_5g
+
+	mac_full_2g_esp=$(echo -n -e "$mac_full_2g" | sed -e 's/../\\x&/g')
+	mac_full_5g_esp=$(echo -n -e "$mac_full_5g" | sed -e 's/../\\x&/g')
+
+
+	if [ -f "$/lib/firmware/mt7615.1.eeprom.bin" ]; then
+		echo "mt7615.1.eeprom.bin exist"
+	else
+		echo "creating mt7615.1.eeprom.bin"
+		dd if=/dev/mtd2 of=/lib/firmware/mt7615.1.eeprom.bin bs=1 count=32768
+		printf $mac_full_2g_esp | dd of=/lib/firmware/mt7615.1.eeprom.bin bs=1 seek=4 count=6 conv=notrunc
+	fi
+
+	if [ -f "$/lib/firmware/mt7615.2.eeprom.bin" ]; then
+		echo "mt7615.2.eeprom.bin exist"
+	else
+		echo "creating mt7615.2.eeprom.bin"
+		dd if=/dev/mtd2 of=/lib/firmware/mt7615.2.eeprom.bin bs=1 skip=32768
+		printf $mac_full_5g_esp | dd of=/lib/firmware/mt7615.2.eeprom.bin bs=1 seek=4 count=6 conv=notrunc
+	fi
+
+	modprobe mt7615
+	mtkwifi reload
+
+}
+
+stop(){
+	echo "stopped"
+}

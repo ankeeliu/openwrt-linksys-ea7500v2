@@ -640,3 +640,21 @@ define Device/zbt-wg3526-32M
 	kmod-usb3 kmod-usb-ledtrig-usbport wpad-basic
 endef
 TARGET_DEVICES += zbt-wg3526-32M
+
+define Device/linksys_ea7500-v2
+  DTS := EA7500V2
+  MTK_SOC := mt7621
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  KERNEL_SIZE := 4096k
+  UBINIZE_OPTS := -E 5
+  IMAGE_SIZE := $(ralink_default_fw_size_32M)
+  DEVICE_VENDOR := Linksys
+  DEVICE_MODEL := EA7500
+  DEVICE_VARIANT := V2
+  DEVICE_PACKAGES := kmod-usb2 kmod-usb3 wpad-basic kmod-mt7615e
+  IMAGES := factory.bin sysupgrade.bin
+  IMAGE/factory.bin := append-kernel | pad-to $$$${KERNEL_SIZE} | append-ubi | check-size $$$$(IMAGE_SIZE)
+  DEVICE_TITLE := Linksys EA7500 V2
+endef 
+TARGET_DEVICES += linksys_ea7500-v2

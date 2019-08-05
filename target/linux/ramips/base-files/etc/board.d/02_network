@@ -197,6 +197,7 @@ ramips_setup_interfaces()
 	ar670w|\
 	ar725w|\
 	rakwireless,rak633|\
+	linksys,ea7500-v2|\
 	rt-ac51u)
 		ucidef_add_switch "switch0" \
 			"0:wan" "1:lan" "2:lan" "3:lan" "4:lan" "6t@eth0"
@@ -588,6 +589,10 @@ ramips_setup_macs()
 	kng_rc)
 		wan_mac=$(mtd_get_mac_binary factory 40)
 		;;
+	linksys,ea7500-v2)
+		wan_mac=$(mtd_get_mac_ascii devinfo hw_mac_addr)
+		lan_mac=$(mtd_get_mac_ascii devinfo hw_mac_addr)
+		;;
 	linkits7688)
 		wan_mac=$(mtd_get_mac_binary factory 4)
 		lan_mac=$(mtd_get_mac_binary factory 46)
@@ -684,7 +689,7 @@ ramips_setup_macs()
 		;;
 	zyxel,keenetic-start)
 		wan_mac=$(mtd_get_mac_binary factory 40)
-		;;
+		;;	
 	*)
 		lan_mac=$(cat /sys/class/net/eth0/address)
 		wan_mac=$(macaddr_add "$lan_mac" 1)
